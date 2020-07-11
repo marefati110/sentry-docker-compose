@@ -1,0 +1,79 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  redis:
+    image: 'redis'
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+
+  pg:
+    image: 'postgres:latest'
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+    environment:
+      POSTGRES_USER: 'sentry'
+      POSTGRES_PASSWORD: 'sentry'
+      POSTGRES_DB: 'sentry'
+
+  sentry:
+    image: 'sentry:latest'
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+    depends_on:
+      - 'redis'
+      - 'pg'
+    ports:
+      - '9000:9000'
+    environment:
+      SENTRY_SECRET_KEY: 'theSentrySecretKey'
+      SENTRY_POSTGRES_HOST: 'pg'
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: 'sentry'
+      SENTRY_DB_USER: 'sentry'
+      SENTRY_DB_PASSWORD: 'sentry'
+      SENTRY_REDIS_HOST: 'redis'
+
+  sentry_worker:
+    image: 'sentry:latest'
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+    depends_on:
+      - 'redis'
+      - 'pg'
+    command: "sentry run worker"
+    environment:
+      SENTRY_SECRET_KEY: 'theSentrySecretKey'
+      SENTRY_POSTGRES_HOST: 'pg'
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: 'sentry'
+      SENTRY_DB_USER: 'sentry'
+      SENTRY_DB_PASSWORD: 'sentry'
+      SENTRY_REDIS_HOST: 'redis'
+
+  sentry_cron:
+    image: 'sentry:latest'
+    restart: always
+    logging:
+      options:
+        max-size: "5m"
+    depends_on:
+      - 'redis'
+      - 'pg'
+    command: "sentry run cron"
+    environment:
+      SENTRY_SECRET_KEY: 'theSentrySecretKey'
+      SENTRY_POSTGRES_HOST: 'pg'
+      SENTRY_POSTGRES_PORT: '5432'
+      SENTRY_DB_NAME: 'sentry'
+      SENTRY_DB_USER: 'sentry'
+      SENTRY_DB_PASSWORD: 'sentry'
+      SENTRY_REDIS_HOST: 'redis'
